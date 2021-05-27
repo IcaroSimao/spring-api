@@ -38,15 +38,15 @@ public class UsuarioController {
     }
 
     @GetMapping(path = "api/usuario/teste/{nome}")
-    public ResponseEntity getUsuarioByNome(@PathVariable("nome") String nome) {
+    public UsuarioModel getUsuarioByNome(@PathVariable("nome") String nome) {
         List<UsuarioModel> todosUsuarios = getUsuarios();
         for (int i = 0; i < todosUsuarios.size(); i++) {
             UsuarioModel usuario = todosUsuarios.get(i);
             if (usuario.getUsuario().equalsIgnoreCase(nome)) {
-                return getUsuarioById(usuario.getId());
+                return usuario;
             }
         }
-        return ResponseEntity.notFound().build();
+        return null;
     }
 
     public boolean existsUsuarioByNome(String nome) {
