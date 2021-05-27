@@ -5,13 +5,18 @@
  */
 package cadastro.cadastro.config;
 
+import cadastro.cadastro.security.JWTAuthenticationFilter;
+import cadastro.cadastro.security.JWTUtil;
 import java.util.Arrays;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -23,23 +28,36 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    @Autowired
+    private JWTUtil jwtUtil;
+    
+    @Autowired
+    private UserDetailsService userDetailsService;
     // Caminhos permitidos que o usuário acesse
-    /* private static String[] PUBLIC_MATCHERS = {
-        "/api/usuario/**"
-    }; */
+    private static String[] PUBLIC_MATCHERS = {
+        "/login"
+    };
     
     // Caminhos permitidos que o usuário acesse, sem que possa fazer POST, PUT ou DELETE
     private static String[] PUBLIC_MATCHERS_GET = {
-        "/api/usuario/**"
+        "/api/usuario/**",
     };
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable().authorizeRequests()
-                .antMatchers(PUBLIC_MATCHERS_GET).permitAll()
-                // .antMatchers(HttpMethod.GET, PUBLIC_MATCHERS_GET).permitAll()
+                .antMatchers(PUBLIC_MATCHERS).permitAll()
+                .antMatchers(HttpMethod.GET, PUBLIC_MATCHERS_GET).permitAll()
                 .anyRequest().authenticated();
+        http.addFilter(new JWTAuthenticationFilter(authenticationManager(), jwtUtil));
     }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+         auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder());
+    }
+    
+    
     
     @Bean
     CorsConfigurationSource corsConfigurationSource() 
