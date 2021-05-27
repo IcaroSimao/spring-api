@@ -6,7 +6,7 @@
 package cadastro.cadastro.repository;
 
 import cadastro.cadastro.model.UsuarioModel;
-import java.util.Collection;
+import java.util.ArrayList;
 import org.springframework.data.repository.CrudRepository;
 
 /**
@@ -16,6 +16,6 @@ import org.springframework.data.repository.CrudRepository;
 public interface UsuarioRepository extends CrudRepository<UsuarioModel, Integer>{
 
     @Override
-    public Collection<UsuarioModel> findAll();
+    public ArrayList<UsuarioModel> findAll();
     
 }

@@ -5,8 +5,16 @@
  */
 package cadastro.cadastro.model;
 
+import cadastro.cadastro.enums.Perfil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -20,11 +28,18 @@ public class UsuarioModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String usuario;
-    @Column(nullable = false)
     private String senha;
-
+    
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name="PERFIS")
+    private Set<Integer> perfis = new HashSet<>();
+    
+    public UsuarioModel(){
+        addPerfil(Perfil.CLIENTE);
+    }
+    
     public Integer getId() {
         return id;
     }
@@ -47,6 +62,14 @@ public class UsuarioModel {
 
     public void setSenha(String senha) {
         this.senha = senha;
+    }
+    
+    public Set<Perfil> getPerfis(){
+        return perfis.stream().map(x -> Perfil.toEnum(x)).collect(Collectors.toSet());
+    }
+    
+    public void addPerfil(Perfil perfil){
+        perfis.add(perfil.getCod());
     }
     
     

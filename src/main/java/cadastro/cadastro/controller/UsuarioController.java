@@ -7,9 +7,10 @@ package cadastro.cadastro.controller;
 
 import cadastro.cadastro.model.UsuarioModel;
 import cadastro.cadastro.repository.UsuarioRepository;
-import java.util.Collection;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,27 +26,60 @@ import org.springframework.web.bind.annotation.RestController;
 public class UsuarioController {
 
     @Autowired
+    private BCryptPasswordEncoder pe;
+
+    @Autowired
     private UsuarioRepository repositorio;
 
     @GetMapping(path = "api/usuario/{id}")
-    public ResponseEntity getUsuario(@PathVariable("id") Integer id) {
+    public ResponseEntity getUsuarioById(@PathVariable("id") Integer id) {
         return repositorio.findById(id).map(record -> ResponseEntity.ok().body(record))
                 .orElse(ResponseEntity.notFound().build());
     }
-    
+
+    @GetMapping(path = "api/usuario/teste/{nome}")
+    public ResponseEntity getUsuarioByNome(@PathVariable("nome") String nome) {
+        List<UsuarioModel> todosUsuarios = getUsuarios();
+        for (int i = 0; i < todosUsuarios.size(); i++) {
+            UsuarioModel usuario = todosUsuarios.get(i);
+            if (usuario.getUsuario().equalsIgnoreCase(nome)) {
+                return getUsuarioById(usuario.getId());
+            }
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    public boolean existsUsuarioByNome(String nome) {
+        List<UsuarioModel> todosUsuarios = getUsuarios();
+        for (int i = 0; i < todosUsuarios.size(); i++) {
+            UsuarioModel usuario = todosUsuarios.get(i);
+            if (usuario.getUsuario().equalsIgnoreCase(nome)) {
+                return repositorio.existsById(usuario.getId());
+            }
+        }
+        return false;
+    }
+
     @GetMapping(path = "api/usuario")
-    public Collection<UsuarioModel> getUsuarios() {
+    public List<UsuarioModel> getUsuarios() {
         return repositorio.findAll();
     }
-    
+
     @PostMapping(path = "api/usuario/salvar")
-    public UsuarioModel postUsuario(@RequestBody UsuarioModel data){
-        return repositorio.save(data);
+    public String postUsuario(@RequestBody UsuarioModel data) {
+        if (existsUsuarioByNome(data.getUsuario())) {
+            return "Usuario já existente!";
+        }
+        // Necessário Encrypitar a senha antes de inserir no banco de dados
+        String senha_segura = data.getSenha();
+        data.setSenha(pe.encode(senha_segura));
+        repositorio.save(data);
+        return "Usuario cadastrado com sucesso";
     }
-    
+
     @DeleteMapping(path = "api/usuario/{id}/apagar")
-    public ResponseEntity deleteUsuario(@PathVariable("id") Integer id){
-        ResponseEntity usuario = getUsuario(id);
+    public ResponseEntity deleteUsuario(@PathVariable("id") Integer id) {
+        ResponseEntity usuario = getUsuarioById(id);
         repositorio.deleteById(id);
         return usuario;
     }
