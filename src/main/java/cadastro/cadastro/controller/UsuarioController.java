@@ -5,11 +5,13 @@
  */
 package cadastro.cadastro.controller;
 
+import cadastro.cadastro.enums.Perfil;
 import cadastro.cadastro.model.UsuarioModel;
 import cadastro.cadastro.repository.UsuarioRepository;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,7 +61,8 @@ public class UsuarioController {
         }
         return false;
     }
-
+    
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping(path = "api/usuario")
     public List<UsuarioModel> getUsuarios() {
         return repositorio.findAll();
@@ -76,7 +79,9 @@ public class UsuarioController {
         repositorio.save(data);
         return "Usuario cadastrado com sucesso";
     }
-
+    
+    // PreAuthorize permite quem tem perfil ADMIN possa deletar um usuário
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping(path = "api/usuario/{id}/apagar")
     public ResponseEntity deleteUsuario(@PathVariable("id") Integer id) {
         ResponseEntity usuario = getUsuarioById(id);
