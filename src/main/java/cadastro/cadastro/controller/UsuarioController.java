@@ -6,8 +6,11 @@
 package cadastro.cadastro.controller;
 
 import cadastro.cadastro.enums.Perfil;
+import cadastro.cadastro.exceptions.AuthorizationException;
 import cadastro.cadastro.model.UsuarioModel;
 import cadastro.cadastro.repository.UsuarioRepository;
+import cadastro.cadastro.security.UserSS;
+import cadastro.cadastro.service.UserService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +38,12 @@ public class UsuarioController {
 
     @GetMapping(path = "api/usuario/{id}")
     public ResponseEntity getUsuarioById(@PathVariable("id") Integer id) {
+        
+        UserSS user = UserService.authenticated();
+        if (user == null || !user.hasRole(Perfil.ADMIN) && !id.equals(user.getId())){
+            throw new AuthorizationException("Acesso negado");
+        }
+        
         return repositorio.findById(id).map(record -> ResponseEntity.ok().body(record))
                 .orElse(ResponseEntity.notFound().build());
     }
